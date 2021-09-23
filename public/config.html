@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel=stylesheet type="text/css" href="/house.css" title="House">
+<script>
+
+var countIoShown = 0;
+
+function saveConfig () {
+
+    var form = document.forms;
+    var newconfig = new Object();
+    newconfig.wiz = new Object();
+    newconfig.wiz.devices = new Array();
+
+    for (var i = 0; i < countIoShown; ++i) {
+
+        var prefix = 'wiz_'+i+'_';
+        var device = new Object();
+        device.name = form.iolistform[prefix+'name'].value;
+        if (!device.name) continue;
+        device.address = form.iolistform[prefix+'address'].value;
+        if (!device.address) continue;
+        var description = form.iolistform[prefix+'desc'].value;
+        if (description)
+            device.description = description;
+        newconfig.wiz.devices.push(device);
+    }
+
+    var command = new XMLHttpRequest();
+    command.open("POST", "/wiz/config");
+    command.setRequestHeader('Content-Type', 'application/json');
+    command.onreadystatechange = function () {
+        if (command.readyState === 4 && command.status !== 200) {
+            window.alert ('Operation failed (error '+command.status+')!');
+        }
+    }
+    command.send(JSON.stringify(newconfig));
+}
+
+function showPlug (name, address, description) {
+
+    var outer = document.createElement("tr");
+
+    var iolist = document.getElementsByClassName ('iolist')[0];
+    var prefix = 'wiz_'+countIoShown+'_';
+    var inner = document.createElement("td");
+    var entry = document.createElement("input");
+    entry.type = 'text';
+    entry.name = prefix+'name';
+    entry.value = name;
+    entry.placeholder = 'Name';
+    inner.appendChild(entry);
+    outer.appendChild(inner);
+
+    inner = document.createElement("td");
+    entry = document.createElement("input");
+    entry.type = 'text';
+    entry.name = prefix+'address';
+    entry.value = address;
+    entry.placeholder = 'MAC Address';
+    entry.inputmode = 'numeric';
+    inner.appendChild(entry);
+    outer.appendChild(inner);
+
+    inner = document.createElement("td");
+    entry = document.createElement("input");
+    entry.type = 'text';
+    entry.name = prefix+'desc';
+    entry.placeholder = 'Text';
+    if (description)
+        entry.value = description;
+    else
+        entry.value = '';
+    inner.appendChild(entry);
+    outer.appendChild(inner);
+
+    iolist.appendChild(outer);
+    countIoShown += 1;
+}
+
+function addConfig () {
+    showPlug ('', '', '');
+}
+
+function wizShowConfig (response) {
+   var iolist = document.getElementsByClassName ('iolist')[0];
+   var devices = response.wiz.devices;
+   for (var i = 0; i < devices.length; i++) {
+      var device = devices[i];
+      if (!device.description) device.description = '';
+      showPlug (device.name, device.address, device.description);
+   }
+}
+
+function wizConfig () {
+    var command = new XMLHttpRequest();
+    command.open("GET", "/wiz/config");
+    command.onreadystatechange = function () {
+        if (command.readyState === 4 && command.status === 200) {
+            wizShowConfig (JSON.parse(command.responseText));
+        }
+    }
+    command.send(null);
+}
+
+function wizShowStatus (response) {
+    document.getElementById('portal').href = 'http://'+response.proxy+'/index.html';
+}
+
+function wizStatus () {
+    var command = new XMLHttpRequest();
+    command.open("GET", "/wiz/status");
+    command.onreadystatechange = function () {
+        if (command.readyState === 4 && command.status === 200) {
+            wizShowStatus (JSON.parse(command.responseText));
+        }
+    }
+    command.send(null);
+}
+
+window.onload = function() {
+   wizConfig();
+   wizStatus();
+};
+</script>
+<head>
+   <title>Philips Wiz Devices</title>
+</head>
+<body>
+   <table class="housetopcontainer">
+   <tr><td>
+   <table class="housetop">
+   <tr>
+   <td><a id="portal" href="/index.html">Portal</a></td>
+   <td><a href="/wiz/index.html">Wiz</a></td>
+   <td><a href="/wiz/events.html">Events</a></td>
+   <td><span>Config</span></td>
+   </tr>
+   </table>
+   </td></tr>
+   </table>
+   <form name="iolistform">
+   <table class="houselargetable iolist">
+      <tr>
+         <th>NAME</th>
+         <th>ADDRESS</th>
+         <th>DESCRIPTION</th>
+      </tr>
+   </table>
+   </form>
+   <div class="housebuttons">
+      <button class="actionbutton" onclick="addConfig()">Add</button>
+      <button class="actionbutton" onclick="saveConfig()">Save</button>
+   </div>
+</body>
+</html>
+
