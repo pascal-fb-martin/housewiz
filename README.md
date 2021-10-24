@@ -11,7 +11,7 @@ This service is not really meant to be accessed directly by end-users: these sho
 * Clone this GitHub repository.
 * make
 * sudo make install
-* Edit /etc/house/housewiz.json (see below)
+* Edit /etc/house/wiz.json (see below)
 
 Otherwise installing [houselights](https://github.com/pascal-fb-martin/houselights) is recommended, but not necessarily on the same computer.
 ## Configuration
