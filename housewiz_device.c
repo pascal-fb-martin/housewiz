@@ -275,6 +275,7 @@ int housewiz_device_set (int device, int state, int pulse) {
     if (Devices[device].detected) {
         housewiz_device_control (device, state);
     }
+    return 1;
 }
 
 static int housewiz_device_enumerate_add (const char *name) {
