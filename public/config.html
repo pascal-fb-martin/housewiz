@@ -85,9 +85,6 @@ function addConfig () {
 
 function wizShowConfig (response) {
 
-   document.getElementsByTagName('title')[0].innerHTML =
-       response.host+' - Wiz Devices';
-
    var iolist = document.getElementsByClassName ('iolist')[0];
    var devices = response.wiz.devices;
    for (var i = 0; i < devices.length; i++) {
@@ -109,7 +106,10 @@ function wizConfig () {
 }
 
 function wizShowStatus (response) {
-    document.getElementById('portal').href = 'http://'+response.proxy+'/index.html';
+    document.getElementById('portal').href =
+        'http://'+response.proxy+'/index.html';
+    document.getElementsByTagName('title')[0].innerHTML =
+        response.host+' - Wiz Devices';
 }
 
 function wizStatus () {
