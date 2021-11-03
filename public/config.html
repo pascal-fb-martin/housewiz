@@ -84,6 +84,10 @@ function addConfig () {
 }
 
 function wizShowConfig (response) {
+
+   document.getElementsByTagName('title')[0].innerHTML =
+       response.host+' - Wiz Devices';
+
    var iolist = document.getElementsByClassName ('iolist')[0];
    var devices = response.wiz.devices;
    for (var i = 0; i < devices.length; i++) {
@@ -125,7 +129,7 @@ window.onload = function() {
 };
 </script>
 <head>
-   <title>Philips Wiz Devices</title>
+   <title>Wiz Devices</title>
 </head>
 <body>
    <table class="housetopcontainer">
