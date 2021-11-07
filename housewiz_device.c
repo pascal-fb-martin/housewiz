@@ -388,6 +388,8 @@ void housewiz_device_periodic (time_t now) {
                 }
             } else {
                 // The ongoing command timed out, forget and cleanup.
+                if (Devices[i].pending)
+                    houselog_event ("DEVICE", Devices[i].name, "TIMEOUT", "");
                 housewiz_device_reset (i, Devices[i].status);
             }
         }
