@@ -113,6 +113,7 @@ struct DeviceMap {
     time_t detected;
     int status;
     int commanded;
+    time_t pending;
     time_t deadline;
     time_t last_sense;
 };
@@ -252,6 +253,7 @@ static void housewiz_device_control (int device, int state) {
 int housewiz_device_set (int device, int state, int pulse) {
 
     const char *namedstate = state?"on":"off";
+    time_t now = time(0);
 
     if (device < 0 || device > DevicesCount) return 0;
 
@@ -261,7 +263,7 @@ int housewiz_device_set (int device, int state, int pulse) {
     }
 
     if (pulse > 0) {
-        Devices[device].deadline = time(0) + pulse;
+        Devices[device].deadline = now + pulse;
         houselog_event ("DEVICE", Devices[device].name, "SET",
                         "%s FOR %d SECONDS", namedstate, pulse);
     } else {
@@ -269,6 +271,7 @@ int housewiz_device_set (int device, int state, int pulse) {
         houselog_event ("DEVICE", Devices[device].name, "SET", "%s", namedstate);
     }
     Devices[device].commanded = state;
+    Devices[device].pending = now + 5;
 
     // Only send a command if we detected the device on the network.
     //
@@ -330,6 +333,11 @@ static void housewiz_device_enumerate (void) {
     }
 }
 
+static void housewiz_device_reset (int i, int status) {
+    Devices[i].commanded = Devices[i].status = status;
+    Devices[i].pending = Devices[i].deadline = 0;
+}
+
 void housewiz_device_periodic (time_t now) {
 
     static time_t LastRetry = 0;
@@ -356,19 +364,26 @@ void housewiz_device_periodic (time_t now) {
         if (Devices[i].detected > 0 && Devices[i].detected < now - 100) {
             houselog_event ("DEVICE", Devices[i].name, "SILENT",
                             "MAC ADDRESS %s", Devices[i].macaddress);
+            housewiz_device_reset (i, 0);
             Devices[i].detected = 0;
         }
 
         if (Devices[i].deadline > 0 && now >= Devices[i].deadline) {
             houselog_event ("DEVICE", Devices[i].name, "RESET", "END OF PULSE");
             Devices[i].commanded = 0;
+            Devices[i].pending = now + 5;
             Devices[i].deadline = 0;
         }
         if (Devices[i].status != Devices[i].commanded) {
-            if (Devices[i].detected) {
-                const char *state = Devices[i].commanded?"on":"off";
-                houselog_event ("DEVICE", Devices[i].name, "RETRY", state);
-                housewiz_device_control (i, Devices[i].commanded);
+            if (Devices[i].pending > now) {
+                if (Devices[i].detected) {
+                    const char *state = Devices[i].commanded?"on":"off";
+                    houselog_event ("DEVICE", Devices[i].name, "RETRY", state);
+                    housewiz_device_control (i, Devices[i].commanded);
+                }
+            } else {
+                // The ongoing command timed out, forget and cleanup.
+                housewiz_device_reset (i, Devices[i].status);
             }
         }
     }
@@ -384,6 +399,7 @@ const char *housewiz_device_refresh (void) {
         Devices[i].macaddress[0] = 0;
         Devices[i].description[0] = 0;
         Devices[i].deadline = 0;
+        Devices[i].pending = 0;
         Devices[i].detected = 0;
     }
     DevicesCount = 0;
@@ -414,9 +430,10 @@ const char *housewiz_device_refresh (void) {
         const char *mac = housewiz_config_string (device, ".address");
         if (mac)
             strncpy (Devices[i].macaddress, mac, sizeof(Devices[i].macaddress));
-        if (echttp_isdebug()) fprintf (stderr, "load device %s, MAC address %s\n", Devices[i].name, Devices[i].macaddress);
-        Devices[i].commanded = 0;
-        Devices[i].deadline = 0;
+        if (echttp_isdebug())
+            fprintf (stderr, "load device %s, MAC address %s\n",
+                     Devices[i].name, Devices[i].macaddress);
+        housewiz_device_reset (i, Devices[i].status); // Use last status known.
     }
     return 0;
 }
@@ -537,13 +554,25 @@ static void housewiz_device_receive (int fd, int mode) {
 
             if (manual) {
                 Devices[device].commanded = status = 1;
+                Devices[device].pending = 0;
                 housewiz_device_control (device, status); // Acknowledge.
             }
             if (Devices[device].status != status) {
-                houselog_event ("DEVICE", Devices[device].name, "CHANGED",
-                                "FROM %s TO %s",
-                                Devices[device].status?"on":"off",
-                                status?"on":"off");
+                if (Devices[device].pending) {
+                    if (status == Devices[device].commanded) {
+                        houselog_event ("DEVICE", Devices[device].name,
+                                        "CONFIRMED", "FROM %s TO %s",
+                                        Devices[device].status?"on":"off",
+                                        status?"on":"off");
+                        Devices[device].pending = 0; // Command complete.
+                    }
+                } else {
+                    houselog_event ("DEVICE", Devices[device].name,
+                                    "CHANGED", "FROM %s TO %s",
+                                    Devices[device].status?"on":"off",
+                                    status?"on":"off");
+                    Devices[device].commanded = status; // By someone else.
+                }
                 Devices[device].status = status;
             }
 
