@@ -142,6 +142,11 @@ static struct NetworkMap Networks[NETWORKS_MAX];
 static int NetworksCount = 0;
 
 
+static void safecpy (char *dest, const char *src, int limit) {
+    strncpy (dest, src, limit-1);
+    dest[limit-1] = 0;
+}
+
 int housewiz_device_count (void) {
     return DevicesCount;
 }
@@ -288,7 +293,7 @@ static int housewiz_device_enumerate_add (const char *name) {
     }
     // Not found: add new entry if there is room, or else overwrite the last.
     if (NetworksCount >= NETWORKS_MAX) NetworksCount = NETWORKS_MAX - 1;
-    strncpy (Networks[NetworksCount].name, name, sizeof(Networks[0].name));
+    safecpy (Networks[NetworksCount].name, name, sizeof(Networks[0].name));
     Networks[NetworksCount].ip[0] = 0;
     Networks[NetworksCount].mac[0]= 0;
     return NetworksCount++;
@@ -423,16 +428,20 @@ const char *housewiz_device_refresh (void) {
         device = housewiz_config_object (devices, path);
         if (device <= 0) continue;
         const char *name = housewiz_config_string (device, ".name");
-        if (name) {
-            strncpy (Devices[i].name, name, sizeof(Devices[i].name));
-            Devices[i].name[sizeof(Devices[i].name)-1] = 0;
-        }
+        if (name)
+            safecpy (Devices[i].name, name, sizeof(Devices[i].name));
         const char *mac = housewiz_config_string (device, ".address");
         if (mac)
-            strncpy (Devices[i].macaddress, mac, sizeof(Devices[i].macaddress));
+            safecpy (Devices[i].macaddress, mac, sizeof(Devices[i].macaddress));
+        const char *desc = housewiz_config_string (device, ".description");
+        if (desc)
+            safecpy (Devices[i].description, desc,
+                     sizeof(Devices[i].description));
+
         if (echttp_isdebug())
-            fprintf (stderr, "load device %s, MAC address %s\n",
-                     Devices[i].name, Devices[i].macaddress);
+            fprintf (stderr, "load device %s, MAC address %s (%s)\n",
+                     Devices[i].name, Devices[i].macaddress,
+                     desc?desc:"no description");
         housewiz_device_reset (i, Devices[i].status); // Use last status known.
     }
     return 0;
@@ -490,7 +499,7 @@ static void housewiz_device_receive (int fd, int mode) {
         // destructive).
         //
         char buffer[256];
-        strncpy (buffer, data, sizeof(buffer));
+        safecpy (buffer, data, sizeof(buffer));
 
         const char *error = echttp_json_parse (buffer, json, &jsoncount);
         if (error) {
