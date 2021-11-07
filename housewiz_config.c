@@ -125,7 +125,7 @@ const char *housewiz_config_update (const char *text) {
         ConfigTokenCount = 0;
         return error;
     }
-    fd = open (ConfigFile, O_WRONLY+O_CREAT, 0777);
+    fd = open (ConfigFile, O_WRONLY|O_TRUNC|O_CREAT, 0777);
     if (fd >= 0) {
         write (fd, text, ConfigTextLength);
         close (fd);
