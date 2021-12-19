@@ -533,6 +533,14 @@ static void housewiz_device_receive (int fd, int mode) {
 
         if (!strcmp (json[method].value.string, "firstBeat")) {
             manual = 1; // Someone just turned it on manually, do not fight.
+            // TBD: remove the manual case and clean up code
+            // if doing the registration query is a better method.
+            if (device >= 0) {
+                // The plug just rebooted, query its status now.
+                houselog_event ("DEVICE", Devices[device].name, "REBOOT", "");
+                housewiz_device_sense(&(Devices[device].ipaddress), 2);
+            }
+            return;
         } else {
             int state = echttp_json_search (json, ".params.state");
             if ((state < 0) || (json[state].type != PARSER_BOOL)) {
