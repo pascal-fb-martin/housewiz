@@ -36,7 +36,7 @@
  *    Recover the current live config, typically to save it to disk after
  *    a change has been detected.
  *
- * const char *housewiz_device_refresh (void);
+ * const char *housewiz_device_refresh (const char *reason);
  *
  *    Re-evaluate the configuration after it changed.
  *
@@ -396,10 +396,12 @@ void housewiz_device_periodic (time_t now) {
     }
 }
 
-const char *housewiz_device_refresh (void) {
+const char *housewiz_device_refresh (const char *reason) {
 
     int i;
     int devices;
+
+    houselog_event ("CONFIG", "wiz", "ACTIVATING", "%s", reason);
 
     for (i = 0; i < DevicesCount; ++i) {
         Devices[i].name[0] = 0;
@@ -597,6 +599,6 @@ static void housewiz_device_receive (int fd, int mode) {
 const char *housewiz_device_initialize (int argc, const char **argv) {
     housewiz_device_socket ();
     echttp_listen (WizSocket, 1, housewiz_device_receive, 0);
-    return housewiz_device_refresh ();
+    return housewiz_device_refresh ("ON STARTUP");
 }
 

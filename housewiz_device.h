@@ -22,7 +22,7 @@
  *
  */
 const char *housewiz_device_initialize (int argc, const char **argv);
-const char *housewiz_device_refresh (void);
+const char *housewiz_device_refresh (const char *reason);
 
 int housewiz_device_changed (void);
 

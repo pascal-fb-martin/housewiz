@@ -171,7 +171,7 @@ static const char *housewiz_config (const char *method, const char *uri,
     } else if (strcmp ("POST", method) == 0) {
         const char *error = housewiz_config_update(data);
         if (error) echttp_error (400, error);
-        housewiz_device_refresh();
+        housewiz_device_refresh("AFTER UPDATE");
     } else {
         echttp_error (400, "invalid method");
     }
