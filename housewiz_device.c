@@ -566,11 +566,19 @@ static void housewiz_device_receive (int fd, int mode) {
             Devices[device].detected = time(0);
 
             if (manual) {
-                Devices[device].commanded = status = 1;
+                // This happens when the device reboots. Log it.
+                // (TBD: I suspect that these devices sometimes reboot on
+                // their own. it could be better to query the device's state
+                // instead of assuming, and forcing, it on.)
+                //
+                Devices[device].status = status = 1;
+                Devices[device].commanded = status;
                 Devices[device].pending = 0;
+                houselog_event ("DEVICE", Devices[device].name,
+                                "OPERATED", "STATE on");
                 housewiz_device_control (device, status); // Acknowledge.
-            }
-            if (Devices[device].status != status) {
+
+            } else if (Devices[device].status != status) {
                 if (Devices[device].pending) {
                     if (status == Devices[device].commanded) {
                         houselog_event ("DEVICE", Devices[device].name,
@@ -581,8 +589,7 @@ static void housewiz_device_receive (int fd, int mode) {
                     }
                 } else {
                     houselog_event ("DEVICE", Devices[device].name,
-                                    manual?"OPERATED":"CHANGED",
-                                    "FROM %s TO %s",
+                                    "CHANGED", "FROM %s TO %s",
                                     Devices[device].status?"on":"off",
                                     status?"on":"off");
                     Devices[device].commanded = status; // By someone else.
