@@ -581,7 +581,8 @@ static void housewiz_device_receive (int fd, int mode) {
                     }
                 } else {
                     houselog_event ("DEVICE", Devices[device].name,
-                                    "CHANGED", "FROM %s TO %s",
+                                    manual?"OPERATED":"CHANGED",
+                                    "FROM %s TO %s",
                                     Devices[device].status?"on":"off",
                                     status?"on":"off");
                     Devices[device].commanded = status; // By someone else.
