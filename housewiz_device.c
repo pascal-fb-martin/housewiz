@@ -283,6 +283,7 @@ int housewiz_device_set (int device, int state, int pulse) {
     //
     if (Devices[device].detected) {
         housewiz_device_control (device, state);
+        Devices[device].last_sense = 0; // Get the state update asap.
     }
     return 1;
 }
@@ -572,7 +573,7 @@ static void housewiz_device_receive (int fd, int mode) {
         if (!strcmp (json[method].value.string, "firstBeat")) {
             // Ignore repeated messages (they last for almost a minute).
             if (Devices[device].reboot < now - 60) {
-                // This plug just rebooted, log and query its status now.
+                // This plug just rebooted, log and force a query soon.
                 int firmware = echttp_json_search (json, ".params.fwVersion");
                 if (firmware < 0) {
                     houselog_trace (HOUSE_FAILURE, "DEVICE",
@@ -581,7 +582,7 @@ static void housewiz_device_receive (int fd, int mode) {
                 }
                 houselog_event ("DEVICE", Devices[device].name, "REBOOT",
                                 "FIRMWARE VERSION %s", json[firmware].value.string);
-                housewiz_device_sense(&(Devices[device].ipaddress), 2);
+                Devices[device].last_sense = now - 30; // In 5 seconds.
                 Devices[device].reboot = now;
             }
             return;
