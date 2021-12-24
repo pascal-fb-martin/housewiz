@@ -46,7 +46,6 @@
 #include "housewiz_device.h"
 
 static int use_houseportal = 0;
-static char HostName[256];
 
 static void hc_help (const char *argv0) {
 
@@ -72,16 +71,13 @@ static const char *housewiz_status (const char *method, const char *uri,
     static char buffer[65537];
     ParserToken token[1024];
     char pool[65537];
-    char host[256];
     int count = housewiz_device_count();
     int i;
-
-    gethostname (host, sizeof(host));
 
     ParserContext context = echttp_json_start (token, 1024, pool, 65537);
 
     int root = echttp_json_add_object (context, 0, 0);
-    echttp_json_add_string (context, root, "host", host);
+    echttp_json_add_string (context, root, "host", houselog_host());
     echttp_json_add_string (context, root, "proxy", houseportal_server());
     echttp_json_add_integer (context, root, "timestamp", (long)time(0));
     int top = echttp_json_add_object (context, root, "control");
@@ -219,8 +215,6 @@ int main (int argc, const char **argv) {
 
     signal(SIGPIPE, SIG_IGN);
 
-    gethostname (HostName, sizeof(HostName));
-
     echttp_default ("-http-service=dynamic");
 
     echttp_open (argc, argv);
@@ -253,7 +247,7 @@ int main (int argc, const char **argv) {
 
     echttp_static_route ("/", "/usr/local/share/house/public");
     echttp_background (&housewiz_background);
-    houselog_event ("SERVICE", "wiz", "START", "ON %s", HostName);
+    houselog_event ("SERVICE", "wiz", "STARTED", "ON %s", houselog_host());
     echttp_loop();
 }
 
