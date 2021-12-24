@@ -41,9 +41,9 @@
 #include "echttp_static.h"
 #include "houseportalclient.h"
 #include "houselog.h"
+#include "houseconfig.h"
 
 #include "housewiz_device.h"
-#include "housewiz_config.h"
 
 static int use_houseportal = 0;
 static char HostName[256];
@@ -169,7 +169,7 @@ static const char *housewiz_config (const char *method, const char *uri,
         echttp_content_type_json ();
         return buffer;
     } else if (strcmp ("POST", method) == 0) {
-        const char *error = housewiz_config_update(data);
+        const char *error = houseconfig_update(data);
         if (error) echttp_error (400, error);
         housewiz_device_refresh("AFTER UPDATE");
     } else {
@@ -197,7 +197,7 @@ static void housewiz_background (int fd, int mode) {
     if (housewiz_device_changed()) {
         static char buffer[65537];
         housewiz_device_live_config (buffer, sizeof(buffer));
-        housewiz_config_update(buffer);
+        houseconfig_update(buffer);
         if (echttp_isdebug()) fprintf (stderr, "Configuration saved\n");
     }
 }
@@ -230,7 +230,8 @@ int main (int argc, const char **argv) {
     }
     houselog_initialize ("wiz", argc, argv);
 
-    error = housewiz_config_load (argc, argv);
+    houseconfig_default ("--config=wiz");
+    error = houseconfig_load (argc, argv);
     if (error) {
         houselog_trace
             (HOUSE_FAILURE, "CONFIG", "Cannot load configuration: %s\n", error);

@@ -93,9 +93,9 @@
 #include "echttp.h"
 #include "echttp_json.h"
 #include "houselog.h"
+#include "houseconfig.h"
 
 #include "housewiz_device.h"
-#include "housewiz_config.h"
 
 
 // This offset is used to "sign" an ID that contains a device index.
@@ -417,11 +417,11 @@ const char *housewiz_device_refresh (const char *reason) {
     }
     DevicesCount = 0;
 
-    if (housewiz_config_size() > 0) {
-        devices = housewiz_config_array (0, ".wiz.devices");
+    if (houseconfig_size() > 0) {
+        devices = houseconfig_array (0, ".wiz.devices");
         if (devices < 0) return "cannot find devices array";
 
-        DevicesCount = housewiz_config_array_length (devices);
+        DevicesCount = houseconfig_array_length (devices);
         if (echttp_isdebug()) fprintf (stderr, "found %d devices\n", DevicesCount);
     }
     DevicesSpace = DevicesCount + 32;
@@ -433,15 +433,15 @@ const char *housewiz_device_refresh (const char *reason) {
         int device;
         char path[128];
         snprintf (path, sizeof(path), "[%d]", i);
-        device = housewiz_config_object (devices, path);
+        device = houseconfig_object (devices, path);
         if (device <= 0) continue;
-        const char *name = housewiz_config_string (device, ".name");
+        const char *name = houseconfig_string (device, ".name");
         if (name)
             safecpy (Devices[i].name, name, sizeof(Devices[i].name));
-        const char *mac = housewiz_config_string (device, ".address");
+        const char *mac = houseconfig_string (device, ".address");
         if (mac)
             safecpy (Devices[i].macaddress, mac, sizeof(Devices[i].macaddress));
-        const char *desc = housewiz_config_string (device, ".description");
+        const char *desc = houseconfig_string (device, ".description");
         if (desc)
             safecpy (Devices[i].description, desc,
                      sizeof(Devices[i].description));

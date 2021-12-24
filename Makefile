@@ -1,5 +1,5 @@
 
-OBJS= housewiz_config.o housewiz_device.o housewiz.o
+OBJS= housewiz_device.o housewiz.o
 LIBOJS=
 
 SHARE=/usr/local/share/house
