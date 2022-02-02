@@ -225,7 +225,7 @@ static void housewiz_device_send (const struct sockaddr_in *a, const char *d) {
     if (echttp_isdebug()) {
         long ip = ntohl((long)(a->sin_addr.s_addr));
         int port = ntohs(a->sin_port);
-        printf ("Sending packet to %d.%d.%d.%d(port %d): %s\n",
+        printf ("Sending packet to %ld.%ld.%ld.%ld(port %d): %s\n",
                 (ip>>24)&0xff, (ip>>16)&0xff, (ip>>8)&0xff, ip&0xff, port, d);
     }
     int sent = sendto (WizSocket, d, strlen(d)+1, 0,
@@ -303,7 +303,7 @@ static int housewiz_device_enumerate_add (const char *name) {
 
 static void housewiz_device_enumerate (void) {
 
-    static char bin2hex[] = "0123456789abcdef";
+    static const char bin2hex[] = "0123456789abcdef";
     int i;
     struct ifaddrs *interfaces;
     struct ifaddrs *cursor;
@@ -319,7 +319,7 @@ static void housewiz_device_enumerate (void) {
             struct sockaddr_in *ia = (struct sockaddr_in *) (cursor->ifa_addr);
             long ip = ntohl((long)(ia->sin_addr.s_addr));
             snprintf (Networks[idx].ip, sizeof(Networks[0].ip),
-                      "%d.%d.%d.%d",
+                      "%ld.%ld.%ld.%ld",
                       (ip>>24)&0xff, (ip>>16)&0xff, (ip>>8)&0xff, ip&0xff);
         } else if (cursor->ifa_addr->sa_family == AF_PACKET) {
             struct sockaddr_ll *mac = (struct sockaddr_ll*) (cursor->ifa_addr);
@@ -488,7 +488,6 @@ static int housewiz_device_mac_search (const char *macaddress) {
 
 static void housewiz_device_receive (int fd, int mode) {
 
-    int status;
     time_t now = time(0);
     char data[256];
     struct sockaddr_in addr;
@@ -597,7 +596,7 @@ static void housewiz_device_receive (int fd, int mode) {
                             "DEVICE", "no valid state in: %s", data);
             return;
         }
-        status = json[state].value.bool;
+        int status = json[state].value.bool;
 
         if (Devices[device].status != status) {
             if (Devices[device].pending) {

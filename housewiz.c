@@ -157,16 +157,17 @@ static const char *housewiz_config (const char *method, const char *uri,
 
 static void housewiz_background (int fd, int mode) {
 
-    static time_t LastRenewal = 0;
     time_t now = time(0);
 
     if (use_houseportal) {
-        static const char *path[] = {"control:/wiz"};
+        static time_t LastRenewal = 0;
         if (now >= LastRenewal + 60) {
-            if (LastRenewal > 0)
+            if (LastRenewal > 0) {
                 houseportal_renew();
-            else
+            } else {
+                static const char *path[] = {"control:/wiz"};
                 houseportal_register (echttp_port(4), path, 1);
+            }
             LastRenewal = now;
         }
     }
