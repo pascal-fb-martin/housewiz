@@ -19,7 +19,7 @@ housewiz: $(OBJS)
 
 install:
 	if [ -e /etc/init.d/housewiz ] ; then systemctl stop housewiz ; systemctl disable housewiz ; rm -f /etc/init.d/housewiz ; fi
-	if [ -e /lib/systemd/system/housewiz,service ] ; then systemctl stop housewiz ; systemctl disable housewiz ; rm -f /lib/systemd/system/housewiz,service ; fi
+	if [ -e /lib/systemd/system/housewiz.service ] ; then systemctl stop housewiz ; systemctl disable housewiz ; rm -f /lib/systemd/system/housewiz.service ; fi
 	mkdir -p /usr/local/bin
 	mkdir -p /var/lib/house
 	mkdir -p /etc/house
@@ -27,8 +27,8 @@ install:
 	cp housewiz /usr/local/bin
 	chown root:root /usr/local/bin/housewiz
 	chmod 755 /usr/local/bin/housewiz
-	cp systemd.service /lib/systemd/system/housewiz,service
-	chown root:root /lib/systemd/system/housewiz,service
+	cp systemd.service /lib/systemd/system/housewiz.service
+	chown root:root /lib/systemd/system/housewiz.service
 	mkdir -p $(SHARE)/public/wiz
 	chmod 755 $(SHARE) $(SHARE)/public $(SHARE)/public/wiz
 	cp public/* $(SHARE)/public/wiz
@@ -43,7 +43,7 @@ uninstall:
 	systemctl stop housewiz
 	systemctl disable housewiz
 	rm -f /usr/local/bin/housewiz
-	rm -f /lib/systemd/system/housewiz,service /etc/init.d/housewiz
+	rm -f /lib/systemd/system/housewiz.service /etc/init.d/housewiz
 	systemctl daemon-reload
 
 purge: uninstall
