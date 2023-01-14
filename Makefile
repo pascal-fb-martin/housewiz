@@ -42,6 +42,7 @@ install:
 uninstall:
 	systemctl stop housewiz
 	systemctl disable housewiz
+	rm -rf $(SHARE)/public/wiz
 	rm -f /usr/local/bin/housewiz
 	rm -f /lib/systemd/system/housewiz.service /etc/init.d/housewiz
 	systemctl daemon-reload
