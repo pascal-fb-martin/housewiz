@@ -12,10 +12,10 @@ clean:
 rebuild: clean all
 
 %.o: %.c
-	gcc -c -g -O -o $@ $<
+	gcc -c -Os -o $@ $<
 
 housewiz: $(OBJS)
-	gcc -g -O -o housewiz $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lgpiod -lrt
+	gcc -Os -o housewiz $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lgpiod -lrt
 
 install:
 	if [ -e /etc/init.d/housewiz ] ; then systemctl stop housewiz ; systemctl disable housewiz ; rm -f /etc/init.d/housewiz ; fi
