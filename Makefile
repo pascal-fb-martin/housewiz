@@ -4,6 +4,8 @@ LIBOJS=
 
 SHARE=/usr/local/share/house
 
+# Local build ---------------------------------------------------
+
 all: housewiz
 
 clean:
@@ -17,9 +19,9 @@ rebuild: clean all
 housewiz: $(OBJS)
 	gcc -Os -o housewiz $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lgpiod -lrt
 
-install:
-	if [ -e /etc/init.d/housewiz ] ; then systemctl stop housewiz ; systemctl disable housewiz ; rm -f /etc/init.d/housewiz ; fi
-	if [ -e /lib/systemd/system/housewiz.service ] ; then systemctl stop housewiz ; systemctl disable housewiz ; rm -f /lib/systemd/system/housewiz.service ; fi
+# Distribution agnostic file installation -----------------------
+
+install-files:
 	mkdir -p /usr/local/bin
 	mkdir -p /var/lib/house
 	mkdir -p /etc/house
@@ -27,26 +29,56 @@ install:
 	cp housewiz /usr/local/bin
 	chown root:root /usr/local/bin/housewiz
 	chmod 755 /usr/local/bin/housewiz
-	cp systemd.service /lib/systemd/system/housewiz.service
-	chown root:root /lib/systemd/system/housewiz.service
 	mkdir -p $(SHARE)/public/wiz
 	chmod 755 $(SHARE) $(SHARE)/public $(SHARE)/public/wiz
 	cp public/* $(SHARE)/public/wiz
 	chown root:root $(SHARE)/public/wiz/*
 	chmod 644 $(SHARE)/public/wiz/*
 	touch /etc/default/housewiz
+
+uninstall-files:
+	rm -rf $(SHARE)/public/wiz
+	rm -f /usr/local/bin/housewiz
+
+purge-config:
+	rm -rf /etc/house/wiz.config /etc/default/housewiz
+
+# Distribution agnostic systemd support -------------------------
+
+install-systemd:
+	cp systemd.service /lib/systemd/system/housewiz.service
+	chown root:root /lib/systemd/system/housewiz.service
 	systemctl daemon-reload
 	systemctl enable housewiz
 	systemctl start housewiz
 
-uninstall:
-	systemctl stop housewiz
-	systemctl disable housewiz
-	rm -rf $(SHARE)/public/wiz
-	rm -f /usr/local/bin/housewiz
-	rm -f /lib/systemd/system/housewiz.service /etc/init.d/housewiz
-	systemctl daemon-reload
+uninstall-systemd:
+	if [ -e /etc/init.d/housewiz ] ; then systemctl stop housewiz ; systemctl disable housewiz ; rm -f /etc/init.d/housewiz ; fi
+	if [ -e /lib/systemd/system/housewiz.service ] ; then systemctl stop housewiz ; systemctl disable housewiz ; rm -f /lib/systemd/system/housewiz.service ; systemctl daemon-reload ; fi
 
-purge: uninstall
-	rm -rf /etc/house/wiz.config /etc/default/housewiz
+stop-systemd: uninstall-systemd
+
+# Debian GNU/Linux install --------------------------------------
+
+install-debian: stop-systemd install-files install-systemd
+
+uninstall-debian: uninstall-systemd uninstall-files
+
+purge-debian: uninstall-debian purge-config
+
+# Void Linux install --------------------------------------------
+
+install-void: install-files
+
+uninstall-void: uninstall-files
+
+purge-void: uninstall-void purge-config
+
+# Default install (Debian GNU/Linux) ----------------------------
+
+install: install-debian
+
+uninstall: uninstall-debian
+
+purge: purge-debian
 
