@@ -1,10 +1,30 @@
+# HouseWiz - A simple home web server for control of Philips Wiz devices.
+#
+# Copyright 2023, Pascal Martin
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+
+HAPP=housewiz
+HROOT=/usr/local
+SHARE=$(HROOT)/share/house
+
+# Application build. --------------------------------------------
 
 OBJS= housewiz_device.o housewiz.o
 LIBOJS=
-
-SHARE=/usr/local/share/house
-
-# Local build ---------------------------------------------------
 
 all: housewiz
 
@@ -21,14 +41,14 @@ housewiz: $(OBJS)
 
 # Distribution agnostic file installation -----------------------
 
-install-files:
-	mkdir -p /usr/local/bin
+install-app:
+	mkdir -p $(HROOT)/bin
 	mkdir -p /var/lib/house
 	mkdir -p /etc/house
-	rm -f /usr/local/bin/housewiz
-	cp housewiz /usr/local/bin
-	chown root:root /usr/local/bin/housewiz
-	chmod 755 /usr/local/bin/housewiz
+	rm -f $(HROOT)/bin/housewiz
+	cp housewiz $(HROOT)/bin
+	chown root:root $(HROOT)/bin/housewiz
+	chmod 755 $(HROOT)/bin/housewiz
 	mkdir -p $(SHARE)/public/wiz
 	chmod 755 $(SHARE) $(SHARE)/public $(SHARE)/public/wiz
 	cp public/* $(SHARE)/public/wiz
@@ -36,49 +56,17 @@ install-files:
 	chmod 644 $(SHARE)/public/wiz/*
 	touch /etc/default/housewiz
 
-uninstall-files:
+uninstall-app:
 	rm -rf $(SHARE)/public/wiz
-	rm -f /usr/local/bin/housewiz
+	rm -f $(HROOT)/bin/housewiz
+
+purge-app:
 
 purge-config:
 	rm -rf /etc/house/wiz.config /etc/default/housewiz
 
-# Distribution agnostic systemd support -------------------------
+# System installation. ------------------------------------------
 
-install-systemd:
-	cp systemd.service /lib/systemd/system/housewiz.service
-	chown root:root /lib/systemd/system/housewiz.service
-	systemctl daemon-reload
-	systemctl enable housewiz
-	systemctl start housewiz
+include $(SHARE)/install.mak
 
-uninstall-systemd:
-	if [ -e /etc/init.d/housewiz ] ; then systemctl stop housewiz ; systemctl disable housewiz ; rm -f /etc/init.d/housewiz ; fi
-	if [ -e /lib/systemd/system/housewiz.service ] ; then systemctl stop housewiz ; systemctl disable housewiz ; rm -f /lib/systemd/system/housewiz.service ; systemctl daemon-reload ; fi
-
-stop-systemd: uninstall-systemd
-
-# Debian GNU/Linux install --------------------------------------
-
-install-debian: stop-systemd install-files install-systemd
-
-uninstall-debian: uninstall-systemd uninstall-files
-
-purge-debian: uninstall-debian purge-config
-
-# Void Linux install --------------------------------------------
-
-install-void: install-files
-
-uninstall-void: uninstall-files
-
-purge-void: uninstall-void purge-config
-
-# Default install (Debian GNU/Linux) ----------------------------
-
-install: install-debian
-
-uninstall: uninstall-debian
-
-purge: purge-debian
 
