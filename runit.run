@@ -1,6 +1,7 @@
 #!/bin/sh
 OPTS=
 if [ -e /etc/default/houselights ] ; then . /etc/default/houselights ; fi
-sv start houseportal || exit 1
+# The dependency mechanism below, straight from the runit Q&A, does not work:
+# sv start houseportal || exit 1
 exec /usr/local/bin/houselights $OPTS
 
