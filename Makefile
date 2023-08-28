@@ -37,7 +37,7 @@ rebuild: clean all
 	gcc -c -Os -o $@ $<
 
 housewiz: $(OBJS)
-	gcc -Os -o housewiz $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lgpiod -lrt
+	gcc -Os -o housewiz $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lrt
 
 # Distribution agnostic file installation -----------------------
 
