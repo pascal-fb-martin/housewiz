@@ -178,6 +178,7 @@ static void housewiz_background (int fd, int mode) {
         houseconfig_update(buffer);
         if (echttp_isdebug()) fprintf (stderr, "Configuration saved\n");
     }
+    houselog_background (now);
 }
 
 static void housewiz_protect (const char *method, const char *uri) {
