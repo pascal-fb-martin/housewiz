@@ -222,6 +222,7 @@ static void housewiz_device_socket (void) {
 }
 
 static void housewiz_device_send (const struct sockaddr_in *a, const char *d) {
+    if ((long)(a->sin_addr.s_addr) == 0) return; // Not detected.
     if (echttp_isdebug()) {
         long ip = ntohl((long)(a->sin_addr.s_addr));
         int port = ntohs(a->sin_port);
@@ -238,6 +239,7 @@ static void housewiz_device_send (const struct sockaddr_in *a, const char *d) {
 static void housewiz_device_sense (const struct sockaddr_in *a, int id) {
     int i;
     char buffer[256];
+    if ((long)(a->sin_addr.s_addr) == 0) return; // Not detected.
     for (i = 0; i < NetworksCount; i++) {
         snprintf (buffer, sizeof(buffer),
                   "{\"method\": \"registration\", \"id\": %d, \"params\":"
