@@ -121,7 +121,7 @@ struct DeviceMap {
 
 static int DeviceListChanged = 0;
 
-static struct DeviceMap *Devices;
+static struct DeviceMap *Devices = 0;
 static int DevicesCount = 0;
 static int DevicesSpace = 0;
 
@@ -161,28 +161,28 @@ int housewiz_device_changed (void) {
 }
 
 const char *housewiz_device_name (int point) {
-    if (point < 0 || point > DevicesCount) return 0;
+    if (point < 0 || point >= DevicesCount) return 0;
     return Devices[point].name;
 }
 
 int housewiz_device_commanded (int point) {
-    if (point < 0 || point > DevicesCount) return 0;
+    if (point < 0 || point >= DevicesCount) return 0;
     return Devices[point].commanded;
 }
 
 time_t housewiz_device_deadline (int point) {
-    if (point < 0 || point > DevicesCount) return 0;
+    if (point < 0 || point >= DevicesCount) return 0;
     return Devices[point].deadline;
 }
 
 const char *housewiz_device_failure (int point) {
-    if (point < 0 || point > DevicesCount) return 0;
+    if (point < 0 || point >= DevicesCount) return 0;
     if (!Devices[point].detected) return "silent";
     return 0;
 }
 
 int housewiz_device_get (int point) {
-    if (point < 0 || point > DevicesCount) return 0;
+    if (point < 0 || point >= DevicesCount) return 0;
     return Devices[point].status;
 }
 
@@ -263,7 +263,7 @@ int housewiz_device_set (int device, int state, int pulse) {
     const char *namedstate = state?"on":"off";
     time_t now = time(0);
 
-    if (device < 0 || device > DevicesCount) return 0;
+    if (device < 0 || device >= DevicesCount) return 0;
 
     if (echttp_isdebug()) {
         if (pulse) fprintf (stderr, "set %s to %s at %ld (pulse %ds)\n", Devices[device].name, namedstate, time(0), pulse);
@@ -404,20 +404,11 @@ const char *housewiz_device_refresh (const char *reason) {
 
     int i;
     int devices;
+    int oldcount = DevicesCount;
+    struct DeviceMap *oldcfg = Devices;
+    struct DeviceMap *newcfg;
 
     houselog_event ("CONFIG", "wiz", "ACTIVATING", "%s", reason);
-
-    for (i = 0; i < DevicesCount; ++i) {
-        Devices[i].name[0] = 0;
-        Devices[i].macaddress[0] = 0;
-        Devices[i].description[0] = 0;
-        Devices[i].deadline = 0;
-        Devices[i].pending = 0;
-        Devices[i].detected = 0;
-        Devices[i].reboot = 0;
-        Devices[i].last_sense = 0;
-    }
-    DevicesCount = 0;
 
     if (houseconfig_size() > 0) {
         devices = houseconfig_array (0, ".wiz.devices");
@@ -425,11 +416,14 @@ const char *housewiz_device_refresh (const char *reason) {
 
         DevicesCount = houseconfig_array_length (devices);
         if (echttp_isdebug()) fprintf (stderr, "found %d devices\n", DevicesCount);
+    } else {
+        DevicesCount = 0;
     }
     DevicesSpace = DevicesCount + 32;
 
-    Devices = calloc(sizeof(struct DeviceMap), DevicesSpace);
-    if (!Devices) return "no more memory";
+    newcfg = calloc(sizeof(struct DeviceMap), DevicesSpace);
+    if (!newcfg) return "no more memory";
+    Devices = newcfg;
 
     for (i = 0; i < DevicesCount; ++i) {
         int device;
@@ -448,12 +442,32 @@ const char *housewiz_device_refresh (const char *reason) {
             safecpy (Devices[i].description, desc,
                      sizeof(Devices[i].description));
 
+        Devices[i].deadline = 0;
+        Devices[i].pending = 0;
+        Devices[i].detected = 0;
+        Devices[i].reboot = 0;
+        Devices[i].last_sense = 0;
+
+        if (oldcfg) {
+            int j;
+            for (j = 0; j < oldcount; ++j) {
+                if (!strcmp(Devices[i].macaddress, oldcfg[j].macaddress)) {
+                    // Recover the last status known.
+                    Devices[i].detected = oldcfg[j].detected;
+                    Devices[i].reboot = oldcfg[j].reboot;
+                    Devices[i].last_sense = oldcfg[j].last_sense;
+                    housewiz_device_reset (i, oldcfg[j].status);
+                    break;
+                }
+            }
+        }
+
         if (echttp_isdebug())
             fprintf (stderr, "load device %s, MAC address %s (%s)\n",
                      Devices[i].name, Devices[i].macaddress,
                      desc?desc:"no description");
-        housewiz_device_reset (i, Devices[i].status); // Use last status known.
     }
+    if (oldcfg) free(oldcfg); // This is safe now that the new config is in place.
     return 0;
 }
 
@@ -541,10 +555,13 @@ static void housewiz_device_receive (int fd, int mode) {
 
         // Record new devices.
         //
-        if (device < 0 && DevicesCount < DevicesSpace) {
+        if (device < 0) {
             if (echttp_isdebug()) fprintf (stderr, "new device %s\n", mac);
             DeviceListChanged = 1;
-            if (DevicesCount >= DevicesSpace) return;
+            if (DevicesCount >= DevicesSpace) {
+                DevicesSpace += 32;
+                Devices = realloc (Devices, sizeof(struct DeviceMap) * DevicesSpace);
+            }
             device = DevicesCount++;
             snprintf (Devices[device].name, sizeof(Devices[0].name), "wiz%d", device+1);
             snprintf (Devices[device].macaddress, sizeof(Devices[0].macaddress),
