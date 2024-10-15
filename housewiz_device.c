@@ -410,7 +410,7 @@ const char *housewiz_device_refresh (const char *reason) {
 
     houselog_event ("CONFIG", "wiz", "ACTIVATING", "%s", reason);
 
-    if (houseconfig_size() > 0) {
+    if (houseconfig_active()) {
         devices = houseconfig_array (0, ".wiz.devices");
         if (devices < 0) return "cannot find devices array";
 
