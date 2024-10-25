@@ -57,7 +57,7 @@ static const char *housewiz_status (const char *method, const char *uri,
     int count = housewiz_device_count();
     int i;
 
-    ParserContext context = echttp_json_start (token, 1024, pool, 65537);
+    ParserContext context = echttp_json_start (token, 1024, pool, sizeof(pool));
 
     int root = echttp_json_add_object (context, 0, 0);
     echttp_json_add_string (context, root, "host", houselog_host());
@@ -80,7 +80,8 @@ static const char *housewiz_status (const char *method, const char *uri,
             echttp_json_add_integer (context, point, "pulse", (int)pulsed);
         echttp_json_add_string (context, point, "gear", "light");
     }
-    const char *error = echttp_json_export (context, buffer, 65537);
+    const char *error = echttp_json_export (context, buffer, sizeof(buffer));
+    echttp_json_end(context);
     if (error) {
         echttp_error (500, error);
         return "";
