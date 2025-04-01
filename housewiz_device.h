@@ -36,7 +36,8 @@ const char *housewiz_device_failure (int point);
 int    housewiz_device_commanded (int point);
 time_t housewiz_device_deadline  (int point);
 int    housewiz_device_get       (int point);
-int    housewiz_device_set       (int point, int state, int pulse);
+int    housewiz_device_set       (int point, int state,
+                                  int pulse, const char *cause);
 
 void housewiz_device_periodic (time_t now);
 

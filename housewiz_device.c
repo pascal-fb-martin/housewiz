@@ -62,7 +62,8 @@
  *
  *    Get the actual state of the device.
  *
- * int housewiz_device_set (int point, int state, int pulse);
+ * int housewiz_device_set (int point, int state,
+ *                          int pulse, const char *cause);
  *
  *    Set the specified point to the on (1) or off (0) state for the pulse
  *    length specified. The pulse length is in seconds. If pulse is 0, the
@@ -258,25 +259,31 @@ static void housewiz_device_control (int device, int state) {
     housewiz_device_send (&(Devices[device].ipaddress), buffer);
 }
 
-int housewiz_device_set (int device, int state, int pulse) {
+int housewiz_device_set (int device, int state, int pulse, const char *cause) {
 
     const char *namedstate = state?"on":"off";
     time_t now = time(0);
 
+    char comment[256];
+    if (cause)
+        snprintf (comment, sizeof(comment), " (%s)", cause);
+    else
+        comment[0] = 0;
     if (device < 0 || device >= DevicesCount) return 0;
 
     if (echttp_isdebug()) {
-        if (pulse) fprintf (stderr, "set %s to %s at %ld (pulse %ds)\n", Devices[device].name, namedstate, time(0), pulse);
-        else       fprintf (stderr, "set %s to %s at %ld\n", Devices[device].name, namedstate, time(0));
+        if (pulse) fprintf (stderr, "set %s to %s at %ld (pulse %ds)%s\n", Devices[device].name, namedstate, time(0), pulse, comment);
+        else       fprintf (stderr, "set %s to %s at %ld%s\n", Devices[device].name, namedstate, time(0), comment);
     }
 
     if (pulse > 0) {
         Devices[device].deadline = now + pulse;
         houselog_event ("DEVICE", Devices[device].name, "SET",
-                        "%s FOR %d SECONDS", namedstate, pulse);
+                        "%s FOR %d SECONDS%s", namedstate, pulse, comment);
     } else {
         Devices[device].deadline = 0;
-        houselog_event ("DEVICE", Devices[device].name, "SET", "%s", namedstate);
+        houselog_event ("DEVICE", Devices[device].name, "SET",
+                        "%s%s", namedstate, comment);
     }
     Devices[device].commanded = state;
     Devices[device].pending = now + 5;
