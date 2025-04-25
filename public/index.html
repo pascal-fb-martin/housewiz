@@ -10,10 +10,10 @@ function wizShowStatus (response) {
     document.getElementsByTagName('title')[0].innerHTML =
         response.host+' - Wiz Devices';
 
-    var state = response.control.status;
-    for (const [key, value] of Object.entries(state)) {
+    for (const [key, value] of Object.entries(response.control.status)) {
         var state = document.getElementById ('state-'+key);
         var button = document.getElementById ('button-'+key);
+        var prio = document.getElementById ('priority-'+key);
         if (value.state == 'on') {
             state.innerHTML = 'ON';
             button.innerHTML = 'OFF';
@@ -29,6 +29,10 @@ function wizShowStatus (response) {
             button.innerHTML = 'ON';
             button.disabled = true;
         }
+        if (value.priority)
+            prio.innerHTML = 'HIGH';
+        else
+            prio.innerHTML = '';
     }
 }
 
@@ -73,6 +77,13 @@ function wizShowConfig (response) {
         label = document.createElement("span");
         label.innerHTML = '(wait)';
         label.id = 'state-'+device.name;
+        inner.appendChild(label);
+        outer.appendChild(inner);
+
+        inner = document.createElement("td");
+        label = document.createElement("span");
+        label.innerHTML = '(wait)';
+        label.id = 'priority-'+device.name;
         inner.appendChild(label);
         outer.appendChild(inner);
 
@@ -136,8 +147,9 @@ window.onload = function() {
    <table class="housewidetable iolist" border="0">
       <tr>
          <th width="14%">NAME</th>
-         <th width="10%">STATE</th>
-         <th width="10%">CONTROL</th>
+         <th width="7%">STATE</th>
+         <th width="6%">PRIORITY</th>
+         <th width="7%">CONTROL</th>
          <th width="52%">DESCRIPTION</th>
       </tr>
    </table>
