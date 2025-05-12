@@ -679,7 +679,10 @@ static void housewiz_device_receive (int fd, int mode) {
                                 status?"on":"off");
                 Devices[device].commanded = status; // By someone else.
                 Devices[device].pending = 0;
-                Devices[device].priority = 1; // Overcome by (external) event.
+                if (status)
+                    Devices[device].priority = 1; // Overcome by external event.
+                else
+                    Devices[device].priority = 0; // Low priority when off.
             }
             Devices[device].status = status;
         }
