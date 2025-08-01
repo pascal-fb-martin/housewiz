@@ -16,10 +16,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA  02110-1301, USA.
+#
+# WARNING
+#       
+# This Makefile depends on echttp and houseportal (dev) being installed.
+
+prefix=/usr/local
+SHARE=$(prefix)/share/house
+        
+INSTALL=/usr/bin/install
 
 HAPP=housewiz
-HROOT=/usr/local
-SHARE=$(HROOT)/share/house
 
 # Application build. --------------------------------------------
 
@@ -37,33 +44,27 @@ rebuild: clean all
 	gcc -c -Os -o $@ $<
 
 housewiz: $(OBJS)
-	gcc -Os -o housewiz $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lrt
+	gcc -Os -o housewiz $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lmagic -lrt
 
 # Distribution agnostic file installation -----------------------
 
-install-app:
-	mkdir -p $(HROOT)/bin
-	mkdir -p /var/lib/house
-	mkdir -p /etc/house
-	rm -f $(HROOT)/bin/housewiz
-	cp housewiz $(HROOT)/bin
-	chown root:root $(HROOT)/bin/housewiz
-	chmod 755 $(HROOT)/bin/housewiz
-	mkdir -p $(SHARE)/public/wiz
-	chmod 755 $(SHARE) $(SHARE)/public $(SHARE)/public/wiz
-	cp public/* $(SHARE)/public/wiz
-	chown root:root $(SHARE)/public/wiz/*
-	chmod 644 $(SHARE)/public/wiz/*
-	touch /etc/default/housewiz
+install-ui: install-preamble
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(SHARE)/public/wiz
+	$(INSTALL) -m 0644 public/* $(DESTDIR)$(SHARE)/public/wiz
+
+install-app: install-ui
+	$(INSTALL) -m 0755 -s housewiz $(DESTDIR)$(prefix)/bin
+	touch $(DESTDIR)/etc/default/housewiz
 
 uninstall-app:
-	rm -rf $(SHARE)/public/wiz
-	rm -f $(HROOT)/bin/housewiz
+	rm -rf $(DESTDIR)$(SHARE)/public/wiz
+	rm -f $(DESTDIR)$(prefix)/bin/housewiz
 
 purge-app:
 
 purge-config:
-	rm -rf /etc/house/wiz.config /etc/default/housewiz
+	rm -r $(DESTDIR)/etc/house/wiz.config
+	rm -f $(DESTDIR)/etc/default/housewiz
 
 # System installation. ------------------------------------------
 
