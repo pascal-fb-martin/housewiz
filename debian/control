@@ -1,0 +1,16 @@
+Source: housewiz
+Version: 1.0
+Section: Web servers
+Maintainer: Pascal Martin <pascal.fb.martin@gmail.com>
+Priority: optional
+Homepage: https://github.com/pascal-fb-martin/housewiz
+Standard-Version: 4.7.0
+Package: housewiz
+Architecture: {{arch}}
+Depends: 
+Description: A House service to control devices using the Wiz Connected protocol
+ HouseWiz is part of the House suite of web services.
+ .
+ HouseWiz allows control of connected switches, plugs and bulbs that
+ implement the Wiz Connected protocol.
+

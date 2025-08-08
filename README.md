@@ -38,3 +38,19 @@ The configuration is stored in file /etc/house/wiz.json. A typical example of co
 ## Device Setup
 Each device must be setup using the WiZ Connected phone app. The protocol for setting up devices has not been reverse engineered at that time.
 
+## Debian Packaging
+
+The provided Makefile supports building private Debian packages. These are _not_ official packages:
+
+- They do not follow all Debian policies.
+
+- They are not built using Debian standard conventions and tools.
+
+- The packaging is not separate from the upstream sources, and there is
+  no source package.
+
+To build a Debian package, use the `debian-package` target:
+```
+make debian-package
+```
+
