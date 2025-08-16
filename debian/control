@@ -7,7 +7,7 @@ Homepage: https://github.com/pascal-fb-martin/housewiz
 Standard-Version: 4.7.0
 Package: housewiz
 Architecture: {{arch}}
-Depends: 
+Depends: houseportal
 Description: A House service to control devices using the Wiz Connected protocol
  HouseWiz is part of the House suite of web services.
  .
