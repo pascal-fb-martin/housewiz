@@ -661,7 +661,7 @@ static void housewiz_device_receive (int fd, int mode) {
                             "DEVICE", "no valid state in: %s", data);
             return;
         }
-        int status = json[state].value.bool;
+        int status = json[state].value.boolean;
 
         if (Devices[device].status != status) {
             if (Devices[device].pending) {
