@@ -5,8 +5,6 @@
 <script>
 function wizShowStatus (response) {
 
-    document.getElementById('portal').href = 'http://'+response.proxy+'/index.html';
-
     document.getElementsByTagName('title')[0].innerHTML =
         response.host+' - Wiz Devices';
 
@@ -132,18 +130,16 @@ window.onload = function() {
    <title>Wiz Devices</title>
 </head>
 <body>
-   <table class="housetopcontainer">
-   <tr><td>
-   <table class="housetop">
+   <header>
+   <table>
    <tr>
-   <td><a id="portal" href="/index.html">Portal</a></td>
    <td><span>Wiz</span></td>
    <td><a href="/wiz/events.html">Events</a></td>
    <td><a href="/wiz/config.html">Config</a></td>
    </tr>
    </table>
-   </td></tr>
-   </table>
+   </header>
+   <section>
    <table class="housewidetable iolist" border="0">
       <tr>
          <th width="14%">NAME</th>
@@ -153,6 +149,7 @@ window.onload = function() {
          <th width="52%">DESCRIPTION</th>
       </tr>
    </table>
+   </section>
 </body>
 </html>
 
