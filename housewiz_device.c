@@ -96,6 +96,7 @@
 #include "echttp_json.h"
 #include "houselog.h"
 #include "houseconfig.h"
+#include "housestate.h"
 
 #include "housewiz_device.h"
 
@@ -145,6 +146,7 @@ struct NetworkMap {
 static struct NetworkMap Networks[NETWORKS_MAX];
 static int NetworksCount = 0;
 
+static int LiveState = 0;
 
 static void safecpy (char *dest, const char *src, int limit) {
     strncpy (dest, src, limit-1);
@@ -158,6 +160,7 @@ int housewiz_device_count (void) {
 int housewiz_device_changed (void) {
     if (DeviceListChanged) {
         DeviceListChanged = 0;
+        housestate_changed (LiveState);
         return 1;
     }
     return 0;
@@ -381,6 +384,9 @@ static void housewiz_device_enumerate (void) {
 }
 
 static void housewiz_device_reset (int i, int status) {
+
+    if (Devices[i].status != status) housestate_changed (LiveState);
+
     Devices[i].commanded = Devices[i].status = status;
     Devices[i].pending = Devices[i].deadline = 0;
     Devices[i].priority = 0;
@@ -685,11 +691,13 @@ static void housewiz_device_receive (int fd, int mode) {
                     Devices[device].priority = 0; // Low priority when off.
             }
             Devices[device].status = status;
+            housestate_changed (LiveState);
         }
     }
 }
 
-const char *housewiz_device_initialize (int argc, const char **argv) {
+const char *housewiz_device_initialize (int argc, const char **argv, int livestate) {
+    LiveState = livestate;
     housewiz_device_socket ();
     echttp_listen (WizSocket, 1, housewiz_device_receive, 0);
     return housewiz_device_refresh ("AT STARTUP");

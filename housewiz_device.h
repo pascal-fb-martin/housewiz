@@ -21,7 +21,7 @@
  * housewiz_device.h - An implementation of the WiZ Connected protocol.
  *
  */
-const char *housewiz_device_initialize (int argc, const char **argv);
+const char *housewiz_device_initialize (int argc, const char **argv, int livestate);
 const char *housewiz_device_refresh (const char *reason);
 
 int housewiz_device_changed (void);
