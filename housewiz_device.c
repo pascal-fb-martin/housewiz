@@ -471,11 +471,10 @@ const char *housewiz_device_refresh (const char *reason) {
     if (!newcfg) return "no more memory";
     Devices = newcfg;
 
+    int *list = calloc (DevicesCount, sizeof(int));
+    houseconfig_enumerate (devices, list, DevicesCount);
     for (i = 0; i < DevicesCount; ++i) {
-        int device;
-        char path[128];
-        snprintf (path, sizeof(path), "[%d]", i);
-        device = houseconfig_object (devices, path);
+        int device = list[i];
         if (device <= 0) continue;
         const char *name = houseconfig_string (device, ".name");
         if (name)
@@ -519,6 +518,8 @@ const char *housewiz_device_refresh (const char *reason) {
                      Devices[i].name, Devices[i].macaddress,
                      desc?desc:"no description");
     }
+    free (list);
+
     if (oldcfg) free(oldcfg); // This is safe now that the new config is in place.
     return 0;
 }
