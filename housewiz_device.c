@@ -472,7 +472,7 @@ const char *housewiz_device_refresh (void) {
     int *list = calloc (DevicesCount, sizeof(int));
     houseconfig_enumerate (devices, list, DevicesCount);
     for (i = 0; i < DevicesCount; ++i) {
-        int device = list[i];
+        int device = houseconfig_object (list[i], 0);
         if (device <= 0) continue;
         const char *name = houseconfig_string (device, ".name");
         if (name)
