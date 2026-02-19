@@ -106,6 +106,15 @@ function wizShowConfig (response) {
 
         inner = document.createElement("td");
         label = document.createElement("span");
+        if (device.ip)
+            label.innerHTML = device.ip;
+        else
+            label.innerHTML = '';
+        inner.appendChild(label);
+        outer.appendChild(inner);
+
+        inner = document.createElement("td");
+        label = document.createElement("span");
         if (device.description)
             label.innerHTML = device.description;
         else
@@ -154,7 +163,8 @@ window.onload = function() {
          <th width="7%">STATE</th>
          <th width="6%">PRIORITY</th>
          <th width="7%">CONTROL</th>
-         <th width="52%">DESCRIPTION</th>
+         <th width="10%">IP</th>
+         <th width="42%">DESCRIPTION</th>
       </tr>
    </table>
    </section>

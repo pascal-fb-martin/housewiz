@@ -539,6 +539,10 @@ const char *housewiz_device_live_config (char *buffer, int size) {
         int device = echttp_json_add_object (context, items, 0);
         echttp_json_add_string (context, device, "name", Devices[i].name);
         echttp_json_add_string (context, device, "address", Devices[i].macaddress);
+        if (Devices[i].ipaddress.sin_addr.s_addr)
+            echttp_json_add_string
+               (context, device, "ip",
+                inet_ntoa(Devices[i].ipaddress.sin_addr));
         echttp_json_add_string
             (context, device, "description", Devices[i].description);
     }
