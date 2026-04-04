@@ -94,6 +94,7 @@
 
 #include "echttp.h"
 #include "echttp_json.h"
+#include "echttp_libc.h"
 #include "houselog.h"
 #include "houseconfig.h"
 #include "housestate.h"
@@ -149,8 +150,8 @@ static int NetworksCount = 0;
 static int LiveState = 0;
 
 static void safecpy (char *dest, const char *src, int limit) {
-    strncpy (dest, src, limit-1);
-    dest[limit-1] = 0;
+    if (src) stpecpy (dest, dest+limit, src);
+    else dest[0] = 0;
 }
 
 int housewiz_device_count (void) {
