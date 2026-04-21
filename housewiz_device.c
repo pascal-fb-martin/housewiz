@@ -309,8 +309,8 @@ void housewiz_device_set (int device, int state, int pulse, const char *cause) {
         comment[0] = 0;
 
     if (echttp_isdebug()) {
-        if (pulse) fprintf (stderr, "set %s to %s at %ld (pulse %ds)%s\n", Devices[device].name, namedstate, time(0), pulse, comment);
-        else       fprintf (stderr, "set %s to %s at %ld%s\n", Devices[device].name, namedstate, time(0), comment);
+        if (pulse) fprintf (stderr, "set %s to %s at %lld (pulse %ds)%s\n", Devices[device].name, namedstate, (long long)time(0), pulse, comment);
+        else       fprintf (stderr, "set %s to %s at %lld%s\n", Devices[device].name, namedstate, (long long)time(0), comment);
     }
 
     if (pulse > 0) {
@@ -451,7 +451,7 @@ void housewiz_device_periodic (time_t now) {
 const char *housewiz_device_refresh (void) {
 
     int i;
-    int devices;
+    int devices = -1;
     int oldcount = DevicesCount;
     struct DeviceMap *oldcfg = Devices;
     struct DeviceMap *newcfg;
@@ -470,6 +470,12 @@ const char *housewiz_device_refresh (void) {
     newcfg = calloc(sizeof(struct DeviceMap), DevicesSpace);
     if (!newcfg) return "no more memory";
     Devices = newcfg;
+
+    if (devices < 0) {
+        // An empty configuration is normal after install.
+        if (oldcfg) free(oldcfg); // The new empty config is now in place.
+        return 0;
+    }
 
     int *list = calloc (DevicesCount, sizeof(int));
     houseconfig_enumerate (devices, list, DevicesCount);
@@ -564,7 +570,7 @@ static void housewiz_device_receive (int fd, int mode) {
     time_t now = time(0);
     char data[256];
     struct sockaddr_in addr;
-    int addrlen = sizeof(addr);
+    socklen_t addrlen = sizeof(addr);
 
     int size = recvfrom (WizSocket, data, sizeof(data), 0,
                          (struct sockaddr *)(&addr), &addrlen);
